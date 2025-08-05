@@ -221,7 +221,7 @@ export async function GET() {
     console.error('Error uploading quiz data:', error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
     }, { status: 500 });
   }
 }

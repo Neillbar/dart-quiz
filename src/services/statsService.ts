@@ -1,6 +1,28 @@
 import { doc, getDoc, setDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+// Helper function to check if two dates are on the same day
+const isSameDay = (date1: Date, date2: Date): boolean => {
+  return date1.getFullYear() === date2.getFullYear() &&
+         date1.getMonth() === date2.getMonth() &&
+         date1.getDate() === date2.getDate();
+};
+
+// Helper function to check if date is yesterday
+const isYesterday = (date: Date, compareDate: Date): boolean => {
+  const yesterday = new Date(compareDate);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return isSameDay(date, yesterday);
+};
+
+// Helper function to calculate when streak expires (24 hours from last play)
+const calculateStreakExpiry = (lastPlayDate: Date): Date => {
+  const expiry = new Date(lastPlayDate);
+  expiry.setHours(23, 59, 59, 999); // End of day
+  expiry.setDate(expiry.getDate() + 1); // Next day end
+  return expiry;
+};
+
 export interface UserStats {
   totalGames: number;
   totalCorrect: number;
@@ -12,6 +34,11 @@ export interface UserStats {
   favoriteFinish: string;
   accuracy: string;
   lastPlayed: Date;
+  // Daily streak fields
+  dailyStreak: number;
+  bestDailyStreak: number;
+  lastDailyPlayDate: string | null; // ISO date string for consistency
+  streakExpiresAt: Date | null;
 }
 
 export const getDefaultStats = (): UserStats => ({
@@ -24,7 +51,11 @@ export const getDefaultStats = (): UserStats => ({
   bestStreak: 0,
   favoriteFinish: 'None',
   accuracy: '0%',
-  lastPlayed: new Date()
+  lastPlayed: new Date(),
+  dailyStreak: 0,
+  bestDailyStreak: 0,
+  lastDailyPlayDate: null,
+  streakExpiresAt: null
 });
 
 export const getUserStats = async (userId: string): Promise<UserStats> => {
@@ -33,7 +64,26 @@ export const getUserStats = async (userId: string): Promise<UserStats> => {
     const statsDoc = await getDoc(userStatsRef);
     
     if (statsDoc.exists()) {
-      return statsDoc.data() as UserStats;
+      const data = statsDoc.data();
+      // Convert Firestore Timestamp to Date for streakExpiresAt
+      if (data.streakExpiresAt && data.streakExpiresAt.toDate) {
+        data.streakExpiresAt = data.streakExpiresAt.toDate();
+      }
+      if (data.lastPlayed && data.lastPlayed.toDate) {
+        data.lastPlayed = data.lastPlayed.toDate();
+      }
+      
+      // Ensure daily streak fields exist (for users with old data structure)
+      const stats: UserStats = {
+        ...getDefaultStats(),
+        ...data,
+        dailyStreak: data.dailyStreak ?? 0,
+        bestDailyStreak: data.bestDailyStreak ?? 0,
+        lastDailyPlayDate: data.lastDailyPlayDate ?? null,
+        streakExpiresAt: data.streakExpiresAt ?? null
+      };
+      
+      return stats;
     } else {
       // Create default stats for new user
       const defaultStats = getDefaultStats();
@@ -67,10 +117,46 @@ export const updateUserStats = async (
     const currentBestScore = parseInt(currentStats.bestScore.split('/')[0]) || 0;
     const newBestScore = gameScore > currentBestScore ? `${gameScore}/${totalQuestions}` : currentStats.bestScore;
     
-    // Update streaks
+    // Update perfect score streaks
     const isPerfectScore = gameScore === totalQuestions;
     const newCurrentStreak = isPerfectScore ? currentStats.currentStreak + 1 : 0;
     const newBestStreak = Math.max(newCurrentStreak, currentStats.bestStreak);
+    
+    // Update daily streaks
+    const now = new Date();
+    let newDailyStreak = currentStats.dailyStreak || 0;
+    let newBestDailyStreak = currentStats.bestDailyStreak || 0;
+    
+    console.log('Current daily streak:', currentStats.dailyStreak);
+    console.log('Last daily play date:', currentStats.lastDailyPlayDate);
+    
+    if (currentStats.lastDailyPlayDate) {
+      const lastPlayDate = new Date(currentStats.lastDailyPlayDate);
+      
+      if (isSameDay(lastPlayDate, now)) {
+        // Already played today, maintain streak
+        newDailyStreak = currentStats.dailyStreak || 0;
+        console.log('Already played today, maintaining streak:', newDailyStreak);
+      } else if (isYesterday(lastPlayDate, now)) {
+        // Played yesterday, increment streak
+        newDailyStreak = (currentStats.dailyStreak || 0) + 1;
+        console.log('Played yesterday, incrementing streak to:', newDailyStreak);
+      } else {
+        // Streak broken, start new streak
+        newDailyStreak = 1;
+        console.log('Streak broken, starting new streak');
+      }
+    } else {
+      // First time playing
+      newDailyStreak = 1;
+      console.log('First time playing, starting streak at 1');
+    }
+    
+    // Update best daily streak
+    newBestDailyStreak = Math.max(newDailyStreak, currentStats.bestDailyStreak);
+    
+    // Calculate when streak expires
+    const streakExpiresAt = calculateStreakExpiry(now);
     
     // Find favorite finish (most used double)
     let favoriteFinish = currentStats.favoriteFinish;
@@ -89,10 +175,63 @@ export const updateUserStats = async (
       currentStreak: newCurrentStreak,
       bestStreak: newBestStreak,
       accuracy: `${newAccuracy}%`,
-      lastPlayed: new Date()
+      lastPlayed: new Date(),
+      dailyStreak: newDailyStreak,
+      bestDailyStreak: newBestDailyStreak,
+      lastDailyPlayDate: now.toISOString().split('T')[0], // Store as YYYY-MM-DD
+      streakExpiresAt: streakExpiresAt
     });
   } catch (error) {
     console.error('Error updating user stats:', error);
+  }
+};
+
+// Check if daily streak is still active
+export const checkDailyStreak = async (userId: string): Promise<UserStats> => {
+  try {
+    const userStats = await getUserStats(userId);
+    const now = new Date();
+    
+    // If no last play date, streak is 0
+    if (!userStats.lastDailyPlayDate) {
+      return userStats;
+    }
+    
+    const lastPlayDate = new Date(userStats.lastDailyPlayDate);
+    
+    // If last played was not today or yesterday, reset streak
+    if (!isSameDay(lastPlayDate, now) && !isYesterday(lastPlayDate, now)) {
+      const userStatsRef = doc(db, 'userStats', userId);
+      await updateDoc(userStatsRef, {
+        dailyStreak: 0,
+        streakExpiresAt: null
+      });
+      
+      return {
+        ...userStats,
+        dailyStreak: 0,
+        streakExpiresAt: null
+      };
+    }
+    
+    // If the streak is active but streakExpiresAt is not set, calculate it
+    if (userStats.dailyStreak > 0 && !userStats.streakExpiresAt) {
+      const expiresAt = calculateStreakExpiry(lastPlayDate);
+      const userStatsRef = doc(db, 'userStats', userId);
+      await updateDoc(userStatsRef, {
+        streakExpiresAt: expiresAt
+      });
+      
+      return {
+        ...userStats,
+        streakExpiresAt: expiresAt
+      };
+    }
+    
+    return userStats;
+  } catch (error) {
+    console.error('Error checking daily streak:', error);
+    return getDefaultStats();
   }
 };
 

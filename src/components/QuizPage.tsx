@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { DartCombination, QuizQuestion, KeyboardMode, GameState, Multiplier } from '@/types';
-import { updateUserStats } from '@/services/statsService';
+import { updateUserStats, getUserStats } from '@/services/statsService';
 import { saveQuizSession, QuizAnswer } from '@/services/sessionsService';
 import { getRandomQuizQuestions, QuizOption } from '@/services/quizService';
+import StreakPopup from '@/components/StreakPopup';
 
 interface QuizPageProps {
   userId?: string;
@@ -36,6 +37,11 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [sessionAnswers, setSessionAnswers] = useState<QuizAnswer[]>([]);
+  
+  // Streak popup state
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [previousDailyStreak, setPreviousDailyStreak] = useState(0);
+  const [currentDailyStreak, setCurrentDailyStreak] = useState(0);
 
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
@@ -193,7 +199,27 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
           try {
             // Update overall stats (add 1 to score if this answer was correct)
             const finalScore = correct ? score + 1 : score;
+            
+            // Get previous streak before updating
+            const prevStats = await getUserStats(userId);
+            console.log('Previous stats:', prevStats);
+            setPreviousDailyStreak(prevStats.dailyStreak || 0);
+            
             await updateUserStats(userId, finalScore, totalQuestions);
+            
+            // Get updated streak after updating
+            const newStats = await getUserStats(userId);
+            console.log('New stats:', newStats);
+            console.log('Daily streak:', newStats.dailyStreak);
+            setCurrentDailyStreak(newStats.dailyStreak || 0);
+            
+            // Show streak popup if streak increased or maintained
+            if (newStats.dailyStreak > 0) {
+              console.log('Showing streak popup!');
+              setShowStreakPopup(true);
+            } else {
+              console.log('Not showing streak popup, dailyStreak is:', newStats.dailyStreak);
+            }
             
             // Save detailed session
             const endTime = Date.now();
@@ -267,7 +293,27 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
         if (userId) {
           try {
             const finalScore = isNoOutshot ? score + 1 : score;
+            
+            // Get previous streak before updating
+            const prevStats = await getUserStats(userId);
+            console.log('Previous stats:', prevStats);
+            setPreviousDailyStreak(prevStats.dailyStreak || 0);
+            
             await updateUserStats(userId, finalScore, totalQuestions);
+            
+            // Get updated streak after updating
+            const newStats = await getUserStats(userId);
+            console.log('New stats:', newStats);
+            console.log('Daily streak:', newStats.dailyStreak);
+            setCurrentDailyStreak(newStats.dailyStreak || 0);
+            
+            // Show streak popup if streak increased or maintained
+            if (newStats.dailyStreak > 0) {
+              console.log('Showing streak popup!');
+              setShowStreakPopup(true);
+            } else {
+              console.log('Not showing streak popup, dailyStreak is:', newStats.dailyStreak);
+            }
             
             const endTime = Date.now();
             const duration = Math.floor((endTime - startTime) / 1000);
@@ -608,6 +654,14 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
           </div>
         )}
       </div>
+      
+      {/* Streak Popup */}
+      <StreakPopup
+        show={showStreakPopup}
+        streak={currentDailyStreak}
+        isNewStreak={currentDailyStreak > previousDailyStreak}
+        onClose={() => setShowStreakPopup(false)}
+      />
     </div>
   );
 };

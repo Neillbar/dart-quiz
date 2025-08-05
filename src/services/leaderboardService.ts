@@ -47,14 +47,10 @@ const getDateFilter = (timePeriod: TimePeriod): Date => {
   switch (timePeriod) {
     case 'today':
       return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    case 'weekly':
+    case 'this-week':
       const weekAgo = new Date(now);
       weekAgo.setDate(weekAgo.getDate() - 7);
       return weekAgo;
-    case 'monthly':
-      const monthAgo = new Date(now);
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      return monthAgo;
     case 'all-time':
     default:
       return new Date(0); // Beginning of time

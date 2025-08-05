@@ -264,7 +264,7 @@ export const getLeaderboard = async (
   const snapshot = await getDocs(q);
   const entries: LeaderboardEntry[] = [];
   
-  snapshot.forEach((doc, index) => {
+  snapshot.docs.forEach((doc, index) => {
     entries.push({
       ...doc.data() as LeaderboardEntry,
       rank: index + 1

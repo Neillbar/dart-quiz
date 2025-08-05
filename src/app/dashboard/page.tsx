@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Dashboard from '@/components/Dashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { getUserStats, UserStats } from '@/services/statsService';
+import { getUserStats, UserStats, checkDailyStreak } from '@/services/statsService';
 import { getProxiedImageUrl } from '@/utils/imageUtils';
 
 const DashboardPage = () => {
@@ -26,7 +26,8 @@ const DashboardPage = () => {
       if (user) {
         setLoadingStats(true);
         try {
-          const userStats = await getUserStats(user.uid);
+          // Check and update daily streak status
+          const userStats = await checkDailyStreak(user.uid);
           setStats(userStats);
         } catch (error) {
           console.error('Error fetching stats:', error);
@@ -87,7 +88,9 @@ const DashboardPage = () => {
     averageScore: stats.averageScore,
     currentStreak: stats.currentStreak,
     favoriteFinish: stats.favoriteFinish,
-    accuracy: stats.accuracy
+    accuracy: stats.accuracy,
+    dailyStreak: stats.dailyStreak || 0,
+    streakExpiresAt: stats.streakExpiresAt
   };
 
   return (

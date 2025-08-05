@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   PlayIcon, 
@@ -10,7 +10,8 @@ import {
   BoltIcon,
   FireIcon,
   StarIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import {
   PlayIcon as PlayIconSolid,
@@ -18,6 +19,7 @@ import {
   TrophyIcon as TrophyIconSolid
 } from '@heroicons/react/24/solid';
 import { DashboardProps, UserStats } from '@/types';
+import StreakPopup from '@/components/StreakPopup';
 
 const Dashboard: React.FC<DashboardProps> = ({
   user = { name: 'Dart Player', email: 'player@example.com' },
@@ -35,7 +37,39 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSignOut
 }) => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
   const router = useRouter();
+
+  // Calculate time remaining for daily streak
+  useEffect(() => {
+    const calculateTimeRemaining = () => {
+      if (!stats.streakExpiresAt) {
+        setTimeRemaining('');
+        return;
+      }
+
+      const now = new Date();
+      const expiresAt = new Date(stats.streakExpiresAt);
+      const diff = expiresAt.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeRemaining('Streak expired');
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [stats.streakExpiresAt]);
 
   const handleTakeQuiz = () => {
     if (onTakeQuiz) {
@@ -224,12 +258,21 @@ const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-2xl font-bold text-white">{stats.bestScore}</p>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-300">
+          <div 
+            className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer transform hover:scale-105"
+            onClick={() => setShowStreakPopup(true)}
+          >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-slate-300 text-sm">Current Streak</span>
-              <BoltIcon className="w-5 h-5 text-dart-green" />
+              <span className="text-slate-300 text-sm">Daily Streak</span>
+              <FireIcon className="w-5 h-5 text-orange-500" />
             </div>
-            <p className="text-2xl font-bold text-white">{stats.currentStreak}</p>
+            <p className="text-2xl font-bold text-white">{stats.dailyStreak || 0} days</p>
+            {timeRemaining && (stats.dailyStreak || 0) > 0 && (
+              <div className="flex items-center mt-1 text-xs text-slate-400">
+                <ClockIcon className="w-3 h-3 mr-1" />
+                {timeRemaining}
+              </div>
+            )}
           </div>
           
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/15 transition-all duration-300">
@@ -325,6 +368,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </main>
+      
+      {/* Streak Popup */}
+      <StreakPopup
+        show={showStreakPopup}
+        streak={stats.dailyStreak || 0}
+        isNewStreak={false}
+        onClose={() => setShowStreakPopup(false)}
+      />
     </div>
   );
 };

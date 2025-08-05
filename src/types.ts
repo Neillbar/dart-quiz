@@ -19,6 +19,8 @@ export interface UserStats {
   currentStreak: number;
   favoriteFinish: string;
   accuracy: string;
+  dailyStreak?: number;
+  streakExpiresAt?: Date | null;
 }
 
 export interface DashboardProps {
