@@ -23,9 +23,13 @@ export async function fetchQuizOptions(): Promise<QuizOption[]> {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       console.log('Quiz doc:', doc.id, data);
+      // Ensure name is a string
+      const name = String(data.name || doc.id || '');
+      console.log('Processed name for doc', doc.id, ':', name);
+      
       quizOptions.push({
         id: parseInt(doc.id) || 0,
-        name: data.name || '',
+        name: name,
         darts: data.darts || 0,
         values: data.values || [],
         isNoOutshot: data.isNoOutshot || false,

@@ -63,6 +63,12 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
         }
         
         setQuestions(quizQuestions);
+        // Debug: Log the first question to check the name field
+        if (quizQuestions.length > 0) {
+          console.log('First question data:', quizQuestions[0]);
+          console.log('Question name:', quizQuestions[0].name);
+          console.log('Is NO OUTSHOT:', quizQuestions[0].isNoOutshot);
+        }
         // Only start countdown after questions are loaded
         setGameState('countdown');
         setCountdownValue(3);
@@ -126,7 +132,15 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
       } else if (value === 'backspace') {
         newInputs[currentInputIndex] = newInputs[currentInputIndex].slice(0, -1);
       } else {
-        newInputs[currentInputIndex] += value;
+        // Only allow up to 2 digits (max dart score is 60)
+        if (newInputs[currentInputIndex].length < 2) {
+          const newValue = newInputs[currentInputIndex] + value;
+          // Check if the resulting number would be valid (0-60)
+          const numValue = parseInt(newValue);
+          if (numValue <= 60) {
+            newInputs[currentInputIndex] = newValue;
+          }
+        }
       }
       setCurrentInputs(newInputs);
     }

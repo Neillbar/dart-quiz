@@ -42,7 +42,7 @@ const StreakPopup: React.FC<StreakPopupProps> = ({ show, streak, isNewStreak, on
     if (show) {
       const timer = setTimeout(() => {
         onClose();
-      }, 3500); // Auto close after 3.5 seconds
+      }, 4000); // Auto close after 4 seconds
 
       return () => clearTimeout(timer);
     }
@@ -51,13 +51,24 @@ const StreakPopup: React.FC<StreakPopupProps> = ({ show, streak, isNewStreak, on
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 50 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 50 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="fixed bottom-8 right-8 z-50"
-        >
+        <>
+          {/* Backdrop - clicking outside closes the popup */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-40"
+          />
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="fixed bottom-8 right-8 z-50 cursor-pointer"
+            onClick={onClose}
+          >
           <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl p-6 shadow-2xl border border-white/20 backdrop-blur-sm">
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -111,6 +122,7 @@ const StreakPopup: React.FC<StreakPopupProps> = ({ show, streak, isNewStreak, on
             </div>
           </div>
         </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
