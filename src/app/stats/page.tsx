@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -27,7 +29,6 @@ export default function StatsPage() {
           const userSessions = await getUserSessions(user.uid);
           setSessions(userSessions);
         } catch (error) {
-          console.error('Error fetching sessions:', error);
         } finally {
           setLoadingSessions(false);
         }

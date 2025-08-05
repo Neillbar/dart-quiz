@@ -44,7 +44,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           router.push('/dashboard');
         }
       } catch (error) {
-        console.error('Error getting redirect result:', error);
       }
     };
 
@@ -77,11 +76,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await signInWithRedirect(auth, googleProvider);
         } catch (redirectError) {
-          console.error('Error signing in with redirect:', redirectError);
           throw redirectError;
         }
       } else {
-        console.error('Error signing in with Google:', error);
         throw error;
       }
     }
@@ -92,7 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut(auth);
       router.push('/login');
     } catch (error) {
-      console.error('Error signing out:', error);
       throw error;
     }
   };

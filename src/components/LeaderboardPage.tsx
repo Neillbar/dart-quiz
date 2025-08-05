@@ -46,7 +46,6 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
   const fetchLeaderboardData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching leaderboard with auth user:', authUser?.uid, authUser?.email);
       const { players: fetchedPlayers, currentUserRank: userRank } = await getLeaderboard(
         timePeriod,
         authUser?.uid
@@ -54,7 +53,6 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
       setPlayers(fetchedPlayers);
       setCurrentUserRank(userRank);
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
     } finally {
       setLoading(false);
     }
@@ -194,8 +192,6 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
   
   // Debug logging
   if (topThree.length > 0) {
-    console.log('Top player data:', topThree[0]);
-    console.log('Picture URL:', topThree[0].picture);
   }
 
   if (loading) {
@@ -337,7 +333,6 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
                         alt={topThree[0].name}
                         className="w-32 h-32 rounded-full border-4 border-dart-gold shadow-xl animate-pulse-slow object-cover"
                         onError={() => {
-                          console.error('Failed to load profile picture:', topThree[0].picture);
                           handleImageError(topThree[0].id);
                         }}
                       />

@@ -38,7 +38,6 @@ export const saveQuizSession = async (session: Omit<QuizSession, 'id' | 'created
     
     return sessionId;
   } catch (error) {
-    console.error('Error saving quiz session:', error);
     throw error;
   }
 };
@@ -74,7 +73,6 @@ export const getUserSessions = async (userId: string, limitCount: number = 50): 
     
     return sessions;
   } catch (error) {
-    console.error('Error fetching user sessions:', error);
     return [];
   }
 };

@@ -1,10 +1,17 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
-import LoginPage from '@/components/LoginPage';
+import dynamicImport from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+
+// Dynamically import LoginPage to avoid SSR issues
+const LoginPage = dynamicImport(() => import('@/components/LoginPage'), {
+  ssr: false
+});
 
 const Login = () => {
   const { signInWithGoogle, user, loading } = useAuth();
@@ -21,7 +28,6 @@ const Login = () => {
     try {
       await signInWithGoogle();
     } catch (error) {
-      console.error('Error signing in:', error);
       // You might want to show an error message to the user here
     }
   };

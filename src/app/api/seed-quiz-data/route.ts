@@ -218,7 +218,6 @@ export async function GET() {
       totalItems: quizData.length 
     });
   } catch (error) {
-    console.error('Error uploading quiz data:', error);
     return NextResponse.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error occurred' 

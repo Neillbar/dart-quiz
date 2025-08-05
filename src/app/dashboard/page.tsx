@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useEffect, useState } from 'react';
 import Dashboard from '@/components/Dashboard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,7 +32,6 @@ const DashboardPage = () => {
           const userStats = await checkDailyStreak(user.uid);
           setStats(userStats);
         } catch (error) {
-          console.error('Error fetching stats:', error);
         } finally {
           setLoadingStats(false);
         }
@@ -56,7 +57,6 @@ const DashboardPage = () => {
     try {
       await logout();
     } catch (error) {
-      console.error('Error signing out:', error);
     }
   };
 
@@ -72,9 +72,7 @@ const DashboardPage = () => {
     return null;
   }
 
-  console.log('Firebase user photoURL:', user.photoURL);
   const proxiedPhotoURL = getProxiedImageUrl(user.photoURL);
-  console.log('Proxied photo URL:', proxiedPhotoURL);
   
   const userData = {
     name: user.displayName || 'Dart Player',

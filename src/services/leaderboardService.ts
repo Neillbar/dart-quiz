@@ -62,13 +62,11 @@ export const getLeaderboard = async (
   currentUserId?: string
 ): Promise<{ players: LeaderboardPlayer[], currentUserRank: number }> => {
   try {
-    console.log('Fetching leaderboard for user:', currentUserId);
     
     // Get all users
     const usersRef = collection(db, 'users');
     const usersSnapshot = await getDocs(usersRef);
     
-    console.log('Total users found:', usersSnapshot.size);
     
     const dateFilter = getDateFilter(timePeriod);
     const players: LeaderboardPlayer[] = [];
@@ -79,7 +77,6 @@ export const getLeaderboard = async (
       const userData = userDoc.data() as FirebaseUserProfile;
       
       if (userId === currentUserId) {
-        console.log('Found current user in users collection:', userData);
       }
       
       // Get user stats directly by document ID
@@ -90,7 +87,6 @@ export const getLeaderboard = async (
         const stats = statsDoc.data() as FirebaseUserStats;
         
         if (userId === currentUserId) {
-          console.log('Current user stats:', stats);
         }
         
         // Filter by time period
@@ -106,7 +102,6 @@ export const getLeaderboard = async (
           }
           
           if (userId === currentUserId) {
-            console.log('Last played date:', lastPlayedDate, 'Date filter:', dateFilter);
           }
           
           if (lastPlayedDate >= dateFilter && stats.totalGames > 0) {
@@ -129,7 +124,6 @@ export const getLeaderboard = async (
         }
       } else {
         if (userId === currentUserId) {
-          console.log('No stats found for current user in userStats collection');
         }
       }
     }
@@ -145,15 +139,11 @@ export const getLeaderboard = async (
     // Find current user rank
     const currentUserRank = players.findIndex(p => p.isCurrentUser) + 1;
     
-    console.log('Total players in leaderboard:', players.length);
-    console.log('Current user rank:', currentUserRank);
     if (currentUserId && currentUserRank === 0) {
-      console.log('Current user not found in final leaderboard!');
     }
     
     return { players, currentUserRank };
   } catch (error) {
-    console.error('Error fetching leaderboard:', error);
     return { players: [], currentUserRank: 0 };
   }
 };
@@ -181,6 +171,5 @@ export const updateBestTime = async (userId: string, timeInSeconds: number): Pro
       }
     }
   } catch (error) {
-    console.error('Error updating best time:', error);
   }
 };

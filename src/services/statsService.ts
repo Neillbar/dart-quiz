@@ -91,7 +91,6 @@ export const getUserStats = async (userId: string): Promise<UserStats> => {
       return defaultStats;
     }
   } catch (error) {
-    console.error('Error fetching user stats:', error);
     return getDefaultStats();
   }
 };
@@ -127,8 +126,6 @@ export const updateUserStats = async (
     let newDailyStreak = currentStats.dailyStreak || 0;
     let newBestDailyStreak = currentStats.bestDailyStreak || 0;
     
-    console.log('Current daily streak:', currentStats.dailyStreak);
-    console.log('Last daily play date:', currentStats.lastDailyPlayDate);
     
     if (currentStats.lastDailyPlayDate) {
       const lastPlayDate = new Date(currentStats.lastDailyPlayDate);
@@ -136,20 +133,16 @@ export const updateUserStats = async (
       if (isSameDay(lastPlayDate, now)) {
         // Already played today, maintain streak
         newDailyStreak = currentStats.dailyStreak || 0;
-        console.log('Already played today, maintaining streak:', newDailyStreak);
       } else if (isYesterday(lastPlayDate, now)) {
         // Played yesterday, increment streak
         newDailyStreak = (currentStats.dailyStreak || 0) + 1;
-        console.log('Played yesterday, incrementing streak to:', newDailyStreak);
       } else {
         // Streak broken, start new streak
         newDailyStreak = 1;
-        console.log('Streak broken, starting new streak');
       }
     } else {
       // First time playing
       newDailyStreak = 1;
-      console.log('First time playing, starting streak at 1');
     }
     
     // Update best daily streak
@@ -182,7 +175,6 @@ export const updateUserStats = async (
       streakExpiresAt: streakExpiresAt
     });
   } catch (error) {
-    console.error('Error updating user stats:', error);
   }
 };
 
@@ -230,7 +222,6 @@ export const checkDailyStreak = async (userId: string): Promise<UserStats> => {
     
     return userStats;
   } catch (error) {
-    console.error('Error checking daily streak:', error);
     return getDefaultStats();
   }
 };
@@ -259,13 +250,11 @@ export const initializeUserProfile = async (userId: string, displayName: string 
       // Update photo URL if it has changed or is missing
       if (photoURL !== existingData.photoURL) {
         updates.photoURL = photoURL || null;
-        console.log('Updating user photoURL from', existingData.photoURL, 'to', photoURL);
       }
       
       // Update display name if it has changed
       if (displayName && displayName !== existingData.displayName) {
         updates.displayName = displayName;
-        console.log('Updating user displayName from', existingData.displayName, 'to', displayName);
       }
       
       // Update email if it has changed
@@ -276,6 +265,5 @@ export const initializeUserProfile = async (userId: string, displayName: string 
       await updateDoc(userRef, updates);
     }
   } catch (error) {
-    console.error('Error initializing user profile:', error);
   }
 };

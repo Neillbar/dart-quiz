@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { 
   PlayIcon, 
   ChartBarIcon, 
@@ -169,12 +170,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-dart-red to-dart-green rounded-xl shadow-lg">
-                <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M12 1l3 8h-6z"/>
-                </svg>
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-dart-red to-dart-green rounded-xl shadow-lg p-2">
+                <Image
+                  src="/img/dartboard.png"
+                  alt="Dart Quiz Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-dart-red via-dart-green to-dart-gold bg-clip-text text-transparent">
@@ -193,7 +196,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     alt={user.name}
                     className="w-10 h-10 rounded-full border-2 border-dart-green/50 object-cover"
                     onError={(e) => {
-                      console.error('Failed to load profile picture in header:', user.picture);
                       e.currentTarget.style.display = 'none';
                       // Show the icon instead
                       const icon = e.currentTarget.parentElement?.querySelector('svg');

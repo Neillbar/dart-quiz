@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import StatisticsPage from '@/components/StatisticsPage';
@@ -98,12 +100,10 @@ const StatisticsPageWrapper: React.FC = () => {
   };
 
   const handleSessionClick = (sessionId: string) => {
-    console.log('Viewing session details:', sessionId);
     // Navigate to detailed session view or show modal
   };
 
   const handleExportStats = () => {
-    console.log('Exporting statistics...');
     // Implement export functionality
     const statsData = {
       user: { name: 'Dart Player', email: 'player@example.com' },

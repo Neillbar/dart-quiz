@@ -54,7 +54,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
         setLoading(true);
         setGameState('loading');
         const quizQuestions = await getRandomQuizQuestions(10);
-        console.log('Loaded questions:', quizQuestions);
         
         if (quizQuestions.length === 0) {
           setError('No quiz questions available. Please check the database.');
@@ -65,15 +64,11 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
         setQuestions(quizQuestions);
         // Debug: Log the first question to check the name field
         if (quizQuestions.length > 0) {
-          console.log('First question data:', quizQuestions[0]);
-          console.log('Question name:', quizQuestions[0].name);
-          console.log('Is NO OUTSHOT:', quizQuestions[0].isNoOutshot);
         }
         // Only start countdown after questions are loaded
         setGameState('countdown');
         setCountdownValue(3);
       } catch (err) {
-        console.error('Error loading questions:', err);
         setError('Failed to load quiz questions');
         setGameState('finished');
       } finally {
@@ -216,23 +211,18 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
             
             // Get previous streak before updating
             const prevStats = await getUserStats(userId);
-            console.log('Previous stats:', prevStats);
             setPreviousDailyStreak(prevStats.dailyStreak || 0);
             
             await updateUserStats(userId, finalScore, totalQuestions);
             
             // Get updated streak after updating
             const newStats = await getUserStats(userId);
-            console.log('New stats:', newStats);
-            console.log('Daily streak:', newStats.dailyStreak);
             setCurrentDailyStreak(newStats.dailyStreak || 0);
             
             // Show streak popup if streak increased or maintained
             if (newStats.dailyStreak > 0) {
-              console.log('Showing streak popup!');
               setShowStreakPopup(true);
             } else {
-              console.log('Not showing streak popup, dailyStreak is:', newStats.dailyStreak);
             }
             
             // Save detailed session
@@ -250,7 +240,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
               answers: [...sessionAnswers, answerData]
             });
           } catch (error) {
-            console.error('Error saving session data:', error);
           }
         }
       }
@@ -310,23 +299,18 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
             
             // Get previous streak before updating
             const prevStats = await getUserStats(userId);
-            console.log('Previous stats:', prevStats);
             setPreviousDailyStreak(prevStats.dailyStreak || 0);
             
             await updateUserStats(userId, finalScore, totalQuestions);
             
             // Get updated streak after updating
             const newStats = await getUserStats(userId);
-            console.log('New stats:', newStats);
-            console.log('Daily streak:', newStats.dailyStreak);
             setCurrentDailyStreak(newStats.dailyStreak || 0);
             
             // Show streak popup if streak increased or maintained
             if (newStats.dailyStreak > 0) {
-              console.log('Showing streak popup!');
               setShowStreakPopup(true);
             } else {
-              console.log('Not showing streak popup, dailyStreak is:', newStats.dailyStreak);
             }
             
             const endTime = Date.now();
@@ -343,7 +327,6 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
               answers: [...sessionAnswers, answerData]
             });
           } catch (error) {
-            console.error('Error saving session data:', error);
           }
         }
       }
