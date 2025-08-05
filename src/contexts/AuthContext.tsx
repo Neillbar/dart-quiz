@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Initialize user profile if logged in
       if (user) {
-        await initializeUserProfile(user.uid, user.displayName, user.email);
+        await initializeUserProfile(user.uid, user.displayName, user.email, user.photoURL);
       }
     });
 

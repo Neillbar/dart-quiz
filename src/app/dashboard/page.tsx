@@ -5,6 +5,7 @@ import Dashboard from '@/components/Dashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { getUserStats, UserStats } from '@/services/statsService';
+import { getProxiedImageUrl } from '@/utils/imageUtils';
 
 const DashboardPage = () => {
   const { user, loading, logout } = useAuth();
@@ -70,10 +71,14 @@ const DashboardPage = () => {
     return null;
   }
 
+  console.log('Firebase user photoURL:', user.photoURL);
+  const proxiedPhotoURL = getProxiedImageUrl(user.photoURL);
+  console.log('Proxied photo URL:', proxiedPhotoURL);
+  
   const userData = {
     name: user.displayName || 'Dart Player',
     email: user.email || '',
-    picture: user.photoURL || '/img/user1.jpg'
+    picture: proxiedPhotoURL
   };
 
   const displayStats = {

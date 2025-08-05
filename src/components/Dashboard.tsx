@@ -157,11 +157,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <img
                     src={user.picture}
                     alt={user.name}
-                    className="w-10 h-10 rounded-full border-2 border-dart-green/50"
+                    className="w-10 h-10 rounded-full border-2 border-dart-green/50 object-cover"
+                    onError={(e) => {
+                      console.error('Failed to load profile picture in header:', user.picture);
+                      e.currentTarget.style.display = 'none';
+                      // Show the icon instead
+                      const icon = e.currentTarget.parentElement?.querySelector('svg');
+                      if (icon) icon.classList.remove('hidden');
+                    }}
                   />
-                ) : (
-                  <UserCircleIcon className="w-10 h-10 text-slate-400" />
-                )}
+                ) : null}
+                <UserCircleIcon className={`w-10 h-10 text-slate-400 ${user.picture ? 'hidden' : ''}`} />
                 <div className="hidden sm:block">
                   <p className="text-white font-medium">{user.name}</p>
                   <p className="text-slate-400 text-sm">{user.email}</p>

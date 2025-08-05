@@ -391,7 +391,14 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 py-3 flex items-center justify-between">
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+          <button 
+            onClick={() => {
+              if (window.confirm('Are you sure you want to quit the quiz? Your progress will be lost.')) {
+                window.location.href = '/dashboard';
+              }
+            }}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          >
             <ChevronLeftIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
           </button>
           <div className="text-center">
@@ -414,11 +421,8 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
       <div className="px-4 py-6">
         {/* Checkout Value */}
         <div className="text-center mb-8">
-          <div className="text-8xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className="text-8xl font-bold text-gray-900 dark:text-white">
             {currentQuestion.name}
-          </div>
-          <div className="text-lg text-gray-600 dark:text-gray-400">
-            {isNoOutshot ? 'This checkout cannot be achieved' : `Checkout in ${currentQuestion.darts} darts`}
           </div>
         </div>
 
@@ -450,13 +454,15 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
             <div className="text-lg font-semibold mb-2">
               {isCorrect ? '✅ Correct!' : '❌ Incorrect'}
             </div>
-            <div className="text-sm">
-              {isNoOutshot ? (
-                'This is a NO OUTSHOT - it cannot be achieved'
-              ) : (
-                <>Correct answer: {currentQuestion.values.join(' + ')} = {currentQuestion.name}</>
-              )}
-            </div>
+            {!isCorrect && (
+              <div className="text-sm">
+                {isNoOutshot ? (
+                  'This is a NO OUTSHOT - it cannot be achieved'
+                ) : (
+                  <>Correct answer: {currentQuestion.values.join(' + ')} = {currentQuestion.name}</>
+                )}
+              </div>
+            )}
           </div>
         )}
 

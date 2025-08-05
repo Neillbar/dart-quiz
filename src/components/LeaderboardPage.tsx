@@ -21,94 +21,50 @@ import {
   StarIcon as StarIconSolid
 } from '@heroicons/react/24/solid';
 import { LeaderboardProps, LeaderboardPlayer, TimePeriod } from '@/types';
+import { getLeaderboard } from '@/services/leaderboardService';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LeaderboardPage: React.FC<LeaderboardProps> = ({
-  user = { name: 'Dart Player', email: 'player@example.com' },
-  players = [],
-  currentUserRank = 0,
-  timePeriod = 'all-time',
   onBack,
   onTimePeriodChange,
   onRefresh
 }) => {
   const router = useRouter();
+  const { user: authUser } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showFormula, setShowFormula] = useState(false);
   const [animatingRanks, setAnimatingRanks] = useState<Set<string>>(new Set());
   const [visiblePlayers, setVisiblePlayers] = useState(20);
   const [scrollToUser, setScrollToUser] = useState(false);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('all-time');
+  const [players, setPlayers] = useState<LeaderboardPlayer[]>([]);
+  const [currentUserRank, setCurrentUserRank] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
 
-  // Sample data for demonstration
-  const samplePlayers: LeaderboardPlayer[] = useMemo(() => [
-    {
-      id: '1',
-      name: 'Magnus "Bullseye" Chen',
-      picture: '/img/user1.jpg',
-      combinedScore: 2950.5,
-      bestScore: '10/10',
-      bestTimeInSeconds: 45,
-      accuracy: 98,
-      totalGames: 127,
-      rank: 1,
-      previousRank: 2,
-      isCurrentUser: false
-    },
-    {
-      id: '2',
-      name: 'Sarah "Lightning" Rodriguez',
-      picture: '/img/user2.jpg',
-      combinedScore: 2890.2,
-      bestScore: '10/10',
-      bestTimeInSeconds: 48,
-      accuracy: 96,
-      totalGames: 95,
-      rank: 2,
-      previousRank: 1,
-      isCurrentUser: false
-    },
-    {
-      id: '3',
-      name: 'James "Precision" Wilson',
-      picture: '/img/user3.jpg',
-      combinedScore: 2820.8,
-      bestScore: '9/10',
-      bestTimeInSeconds: 52,
-      accuracy: 94,
-      totalGames: 203,
-      rank: 3,
-      previousRank: 3,
-      isCurrentUser: false
-    },
-    {
-      id: '4',
-      name: user.name,
-      picture: user.picture,
-      combinedScore: 2750.3,
-      bestScore: '9/10',
-      bestTimeInSeconds: 58,
-      accuracy: 92,
-      totalGames: 78,
-      rank: 4,
-      previousRank: 5,
-      isCurrentUser: true
-    },
-    // Generate more sample players
-    ...Array.from({ length: 46 }, (_, i) => ({
-      id: `${i + 5}`,
-      name: `Player ${i + 5}`,
-      combinedScore: 2700 - (i * 25) - Math.random() * 50,
-      bestScore: Math.random() > 0.3 ? `${Math.floor(Math.random() * 3) + 7}/10` : `${Math.floor(Math.random() * 2) + 8}/10`,
-      bestTimeInSeconds: 60 + Math.floor(Math.random() * 120),
-      accuracy: 85 - Math.floor(Math.random() * 15),
-      totalGames: Math.floor(Math.random() * 150) + 20,
-      rank: i + 5,
-      previousRank: i + 5 + (Math.random() > 0.7 ? (Math.random() > 0.5 ? 1 : -1) : 0),
-      isCurrentUser: false
-    }))
-  ], [user.name, user.picture]);
+  // Fetch leaderboard data
+  const fetchLeaderboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching leaderboard with auth user:', authUser?.uid, authUser?.email);
+      const { players: fetchedPlayers, currentUserRank: userRank } = await getLeaderboard(
+        timePeriod,
+        authUser?.uid
+      );
+      setPlayers(fetchedPlayers);
+      setCurrentUserRank(userRank);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [timePeriod, authUser?.uid]);
 
-  const displayPlayers = players.length > 0 ? players : samplePlayers;
-  const currentUser = displayPlayers.find(p => p.isCurrentUser);
+  useEffect(() => {
+    fetchLeaderboardData();
+  }, [fetchLeaderboardData]);
+
+  const currentUser = players.find(p => p.isCurrentUser);
 
   const handleBack = () => {
     if (onBack) {
@@ -119,6 +75,7 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
   };
 
   const handleTimePeriodChange = (period: TimePeriod) => {
+    setTimePeriod(period);
     if (onTimePeriodChange) {
       onTimePeriodChange(period);
     }
@@ -126,10 +83,32 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    
+    // Store previous ranks
+    const previousPlayersMap = new Map(players.map(p => [p.id, p.rank]));
+    
+    // Refresh data
+    await fetchLeaderboardData();
+    
+    // Animate rank changes
+    const changedRanks = new Set(
+      players
+        .filter(p => {
+          const prevRank = previousPlayersMap.get(p.id);
+          return prevRank && prevRank !== p.rank;
+        })
+        .map(p => p.id)
+    );
+    setAnimatingRanks(changedRanks);
+    
     if (onRefresh) {
       await onRefresh();
     }
-    setTimeout(() => setIsRefreshing(false), 1000);
+    
+    setTimeout(() => {
+      setIsRefreshing(false);
+      setAnimatingRanks(new Set());
+    }, 1000);
   };
 
   const scrollToCurrentUser = useCallback(() => {
@@ -193,7 +172,15 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
   };
 
   const loadMorePlayers = () => {
-    setVisiblePlayers(prev => Math.min(prev + 20, displayPlayers.length));
+    setVisiblePlayers(prev => Math.min(prev + 20, players.length));
+  };
+
+  const handleImageError = (playerId: string) => {
+    setImageLoadErrors(prev => new Set(prev).add(playerId));
+  };
+
+  const shouldShowIcon = (player: LeaderboardPlayer) => {
+    return !player.picture || imageLoadErrors.has(player.id);
   };
 
   const timePeriods: { value: TimePeriod; label: string }[] = [
@@ -202,8 +189,25 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
     { value: 'today', label: 'Today' }
   ];
 
-  const topThree = displayPlayers.slice(0, 3);
-  const remainingPlayers = displayPlayers.slice(3, visiblePlayers);
+  const topThree = players.slice(0, 3);
+  const remainingPlayers = players.slice(3, visiblePlayers);
+  
+  // Debug logging
+  if (topThree.length > 0) {
+    console.log('Top player data:', topThree[0]);
+    console.log('Picture URL:', topThree[0].picture);
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-dart-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading leaderboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
@@ -220,9 +224,9 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
       </div>
 
       {/* Header */}
-      <header className="relative z-10 bg-white/5 backdrop-blur-sm border-b border-white/10">
+      <header className="relative z-50 bg-slate-900/95 backdrop-blur-sm border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Back button and title */}
             <div className="flex items-center space-x-4">
               <button
@@ -245,7 +249,7 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
             </div>
 
             {/* Controls */}
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Time Period Filter */}
               <div className="flex bg-white/10 backdrop-blur-sm rounded-lg p-1 border border-white/20">
                 {timePeriods.map((period) => (
@@ -289,7 +293,7 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-4">
         
         {/* Combined Score Formula */}
         <div className="mb-8">
@@ -315,11 +319,102 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
         </div>
 
         {/* Podium - Top 3 Players */}
-        {topThree.length >= 3 && (
+        {topThree.length > 0 && (
           <div className="mb-12">
             <h2 className="text-3xl font-bold text-center text-white mb-8">🏆 Hall of Fame 🏆</h2>
             
-            <div className="flex items-end justify-center space-x-8 max-w-4xl mx-auto">
+            {/* Show different layout based on number of players */}
+            {topThree.length === 1 ? (
+              // Single player layout
+              <div className="flex justify-center max-w-4xl mx-auto">
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-4">
+                    {shouldShowIcon(topThree[0]) ? (
+                      <UserCircleIcon className="w-32 h-32 text-dart-gold animate-pulse-slow" />
+                    ) : (
+                      <img
+                        src={topThree[0].picture}
+                        alt={topThree[0].name}
+                        className="w-32 h-32 rounded-full border-4 border-dart-gold shadow-xl animate-pulse-slow object-cover"
+                        onError={() => {
+                          console.error('Failed to load profile picture:', topThree[0].picture);
+                          handleImageError(topThree[0].id);
+                        }}
+                      />
+                    )}
+                    <div className="absolute -top-3 -right-3 w-12 h-12 bg-dart-gold rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                      <span className="text-white font-bold text-lg">1</span>
+                    </div>
+                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                      <StarIconSolid className="w-8 h-8 text-dart-gold animate-bounce" />
+                    </div>
+                  </div>
+                  <div className="text-center mb-4">
+                    <h3 className="text-2xl font-bold text-dart-gold">{topThree[0].name}</h3>
+                    <p className="text-dart-gold font-bold text-3xl">{Math.round(topThree[0].combinedScore)}</p>
+                    <p className="text-lg text-slate-300">{topThree[0].bestScore} • {formatTime(topThree[0].bestTimeInSeconds)}</p>
+                  </div>
+                  <div className="w-48 h-40 bg-gradient-to-t from-dart-gold to-yellow-400 rounded-t-lg flex items-center justify-center shadow-xl relative overflow-hidden">
+                    <TrophyIconSolid className="w-20 h-20 text-white" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20"></div>
+                  </div>
+                </div>
+              </div>
+            ) : topThree.length === 2 ? (
+              // Two players layout
+              <div className="flex items-end justify-center space-x-8 max-w-4xl mx-auto">
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-4">
+                    {topThree[0].picture ? (
+                      <img
+                        src={topThree[0].picture}
+                        alt={topThree[0].name}
+                        className="w-24 h-24 rounded-full border-4 border-dart-gold shadow-xl animate-pulse-slow"
+                      />
+                    ) : (
+                      <UserCircleIcon className="w-24 h-24 text-dart-gold animate-pulse-slow" />
+                    )}
+                    <div className="absolute -top-3 -right-3 w-10 h-10 bg-dart-gold rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                      <span className="text-white font-bold">1</span>
+                    </div>
+                  </div>
+                  <div className="text-center mb-4">
+                    <h3 className="text-xl font-bold text-dart-gold">{topThree[0].name}</h3>
+                    <p className="text-dart-gold font-bold text-2xl">{Math.round(topThree[0].combinedScore)}</p>
+                    <p className="text-sm text-slate-300">{topThree[0].bestScore} • {formatTime(topThree[0].bestTimeInSeconds)}</p>
+                  </div>
+                  <div className="w-36 h-32 bg-gradient-to-t from-dart-gold to-yellow-400 rounded-t-lg flex items-center justify-center shadow-xl">
+                    <TrophyIconSolid className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-4">
+                    {topThree[1].picture ? (
+                      <img
+                        src={topThree[1].picture}
+                        alt={topThree[1].name}
+                        className="w-20 h-20 rounded-full border-4 border-gray-400 shadow-xl"
+                      />
+                    ) : (
+                      <UserCircleIcon className="w-20 h-20 text-gray-400" />
+                    )}
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center border-2 border-white">
+                      <span className="text-white font-bold text-sm">2</span>
+                    </div>
+                  </div>
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-bold text-white">{topThree[1].name}</h3>
+                    <p className="text-gray-300 font-bold text-xl">{Math.round(topThree[1].combinedScore)}</p>
+                    <p className="text-sm text-slate-400">{topThree[1].bestScore} • {formatTime(topThree[1].bestTimeInSeconds)}</p>
+                  </div>
+                  <div className="w-32 h-24 bg-gradient-to-t from-gray-500 to-gray-400 rounded-t-lg flex items-center justify-center shadow-xl">
+                    <TrophyIconSolid className="w-12 h-12 text-white" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Three or more players - original layout
+              <div className="flex items-end justify-center space-x-8 max-w-4xl mx-auto">
               {/* Second Place */}
               <div className="flex flex-col items-center">
                 <div className="relative mb-4">
@@ -402,6 +497,7 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
                 </div>
               </div>
             </div>
+            )}
           </div>
         )}
 
@@ -522,13 +618,13 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
             </div>
 
             {/* Load More Button */}
-            {visiblePlayers < displayPlayers.length && (
+            {visiblePlayers < players.length && (
               <div className="text-center mt-8">
                 <button
                   onClick={loadMorePlayers}
                   className="bg-dart-gold hover:bg-yellow-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105"
                 >
-                  Load More Players ({displayPlayers.length - visiblePlayers} remaining)
+                  Load More Players ({players.length - visiblePlayers} remaining)
                 </button>
               </div>
             )}
@@ -536,7 +632,7 @@ const LeaderboardPage: React.FC<LeaderboardProps> = ({
         )}
 
         {/* Empty State */}
-        {displayPlayers.length === 0 && (
+        {players.length === 0 && (
           <div className="text-center py-16">
             <TrophyIcon className="w-24 h-24 text-slate-400 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-2">No players yet</h3>

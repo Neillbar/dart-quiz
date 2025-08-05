@@ -97,7 +97,7 @@ export const updateUserStats = async (
 };
 
 // Initialize user profile if it doesn't exist
-export const initializeUserProfile = async (userId: string, displayName: string | null, email: string | null): Promise<void> => {
+export const initializeUserProfile = async (userId: string, displayName: string | null, email: string | null, photoURL?: string | null): Promise<void> => {
   try {
     const userRef = doc(db, 'users', userId);
     const userDoc = await getDoc(userRef);
@@ -106,14 +106,35 @@ export const initializeUserProfile = async (userId: string, displayName: string 
       await setDoc(userRef, {
         displayName: displayName || 'Dart Player',
         email: email || '',
+        photoURL: photoURL || null,
         createdAt: new Date(),
         lastLogin: new Date()
       });
     } else {
-      // Update last login
-      await updateDoc(userRef, {
+      // Update last login and check for profile changes
+      const existingData = userDoc.data();
+      const updates: any = {
         lastLogin: new Date()
-      });
+      };
+      
+      // Update photo URL if it has changed or is missing
+      if (photoURL !== existingData.photoURL) {
+        updates.photoURL = photoURL || null;
+        console.log('Updating user photoURL from', existingData.photoURL, 'to', photoURL);
+      }
+      
+      // Update display name if it has changed
+      if (displayName && displayName !== existingData.displayName) {
+        updates.displayName = displayName;
+        console.log('Updating user displayName from', existingData.displayName, 'to', displayName);
+      }
+      
+      // Update email if it has changed
+      if (email && email !== existingData.email) {
+        updates.email = email;
+      }
+      
+      await updateDoc(userRef, updates);
     }
   } catch (error) {
     console.error('Error initializing user profile:', error);
