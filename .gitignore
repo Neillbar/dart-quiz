@@ -43,3 +43,14 @@ testem.log
 Thumbs.db
 .next/
 *node_modules/
+
+# Environment and sensitive files
+.env
+.env.local
+.env.production
+.env.development
+
+# Firebase Admin SDK credentials
+scripts/uploadWithAdmin.js
+firebase-admin-sdk.json
+*-firebase-adminsdk-*.json
