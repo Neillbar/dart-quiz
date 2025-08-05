@@ -25,6 +25,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
+    // Return a default value during SSR/SSG
+    if (typeof window === 'undefined') {
+      return {
+        user: null,
+        loading: true,
+        signInWithGoogle: async () => {},
+        logout: async () => {},
+      };
+    }
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
