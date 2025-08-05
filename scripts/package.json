@@ -1,0 +1,13 @@
+{
+  "name": "dart-quiz-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for dart quiz data management",
+  "main": "uploadWithAdmin.js",
+  "scripts": {
+    "upload": "node uploadWithAdmin.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "type": "commonjs"
+}
