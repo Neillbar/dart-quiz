@@ -53,7 +53,8 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
       try {
         setLoading(true);
         setGameState('loading');
-        const quizQuestions = await getRandomQuizQuestions(10);
+        // Load ALL questions from database and randomly select them
+        const quizQuestions = await getRandomQuizQuestions(0); // 0 means get all questions
         
         if (quizQuestions.length === 0) {
           setError('No quiz questions available. Please check the database.');
@@ -339,7 +340,7 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
       <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="text-3xl font-bold mb-4">Loading Questions...</div>
-          <div className="text-lg mb-6 opacity-80">Preparing 10 random checkouts for you</div>
+          <div className="text-lg mb-6 opacity-80">Preparing quiz questions for you</div>
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
         </div>
       </div>
@@ -474,7 +475,15 @@ const QuizPage: React.FC<QuizPageProps> = ({ userId }) => {
           {currentInputs.map((input, index) => (
             <div
               key={index}
-              className={`w-20 h-16 border-2 rounded-lg flex items-center justify-center text-2xl font-bold transition-all ${
+              onClick={() => {
+                // Set this as the current input index
+                setCurrentInputIndex(index);
+                // Clear the input when clicking on it
+                const newInputs = [...currentInputs];
+                newInputs[index] = '';
+                setCurrentInputs(newInputs);
+              }}
+              className={`w-20 h-16 border-2 rounded-lg flex items-center justify-center text-2xl font-bold transition-all cursor-pointer hover:opacity-80 ${
                 currentInputIndex === index
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                   : input

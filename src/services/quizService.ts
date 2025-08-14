@@ -61,6 +61,13 @@ export async function getRandomQuizQuestions(count: number = 10): Promise<QuizOp
     return [];
   }
   
+  // If count is 0, return all questions shuffled
+  if (count === 0) {
+    // Combine all questions and shuffle
+    const allQuestions = [...validOptions, ...noOutshotOptions];
+    return allQuestions.sort(() => Math.random() - 0.5);
+  }
+  
   // Calculate how many NO OUTSHOT questions to include (roughly 10-20% of total)
   const noOutshotCount = noOutshotOptions.length > 0 ? Math.max(1, Math.floor(count * 0.15)) : 0;
   const regularCount = count - noOutshotCount;
