@@ -109,6 +109,16 @@ const Dashboard: React.FC<DashboardProps> = ({
       isPrimary: true
     },
     {
+      id: 'mini-games',
+      title: 'Mini Games',
+      description: 'Quick practice games',
+      icon: BoltIcon,
+      iconSolid: BoltIcon,
+      onClick: () => router.push('/mini-games'),
+      gradient: 'from-yellow-500 to-orange-600',
+      hoverGradient: 'from-yellow-600 to-orange-700'
+    },
+    {
       id: 'stats',
       title: 'Statistics',
       description: 'View your performance metrics',

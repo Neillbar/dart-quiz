@@ -16,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const quizData = [
-  { id: 1, name: 'NO OUTSHOT', darts: 0, values: [] },
+  { id: 1, name: '1', darts: 0, values: [] },
   { id: 2, name: '2', darts: 1, values: [2] },
   { id: 3, name: '3', darts: 2, values: [1, 2] },
   { id: 4, name: '4', darts: 1, values: [4] },
@@ -174,28 +174,28 @@ const quizData = [
   { id: 156, name: '156', darts: 3, values: [60, 60, 36] },
   { id: 157, name: '157', darts: 3, values: [60, 57, 40] },
   { id: 158, name: '158', darts: 3, values: [60, 60, 38] },
-  { id: 159, name: 'NO OUTSHOT', darts: 0, values: [] },
+  { id: 159, name: '159', darts: 0, values: [] },
   { id: 160, name: '160', darts: 3, values: [60, 60, 40] },
   { id: 161, name: '161', darts: 3, values: [60, 51, 50] },
-  { id: 162, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 163, name: 'NO OUTSHOT', darts: 0, values: [] },
+  { id: 162, name: '162', darts: 0, values: [] },
+  { id: 163, name: '163', darts: 0, values: [] },
   { id: 164, name: '164', darts: 3, values: [60, 54, 50] },
-  { id: 165, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 166, name: 'NO OUTSHOT', darts: 0, values: [] },
+  { id: 165, name: '165', darts: 0, values: [] },
+  { id: 166, name: '166', darts: 0, values: [] },
   { id: 167, name: '167', darts: 3, values: [60, 57, 50] },
-  { id: 168, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 169, name: 'NO OUTSHOT', darts: 0, values: [] },
+  { id: 168, name: '168', darts: 0, values: [] },
+  { id: 169, name: '169', darts: 0, values: [] },
   { id: 170, name: '170', darts: 3, values: [60, 60, 50] },
-  { id: 171, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 172, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 173, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 174, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 175, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 176, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 177, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 178, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 179, name: 'NO OUTSHOT', darts: 0, values: [] },
-  { id: 180, name: 'NO OUTSHOT', darts: 0, values: [] }
+  { id: 171, name: '171', darts: 0, values: [] },
+  { id: 172, name: '172', darts: 0, values: [] },
+  { id: 173, name: '173', darts: 0, values: [] },
+  { id: 174, name: '174', darts: 0, values: [] },
+  { id: 175, name: '175', darts: 0, values: [] },
+  { id: 176, name: '176', darts: 0, values: [] },
+  { id: 177, name: '177', darts: 0, values: [] },
+  { id: 178, name: '178', darts: 0, values: [] },
+  { id: 179, name: '179', darts: 0, values: [] },
+  { id: 180, name: '180', darts: 0, values: [] }
 ];
 
 export async function GET() {
@@ -208,6 +208,7 @@ export async function GET() {
         name: quiz.name,
         darts: quiz.darts,
         values: quiz.values,
+        isNoOutshot: quiz.darts === 0,
         createdAt: new Date()
       });
     }
