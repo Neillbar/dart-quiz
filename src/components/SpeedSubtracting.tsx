@@ -50,6 +50,7 @@ const SpeedSubtracting: React.FC = () => {
     if (gameState.gameComplete && !savingScore && currentUser) {
       saveScoreToLeaderboard();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState.gameComplete]);
 
   const startGame = () => {

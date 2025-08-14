@@ -303,7 +303,7 @@ const RapidQuizGame: React.FC<RapidQuizGameProps> = ({ userId }) => {
             </div>
           )}
 
-          <h2 className="text-3xl font-bold text-white mb-6">Time's Up!</h2>
+          <h2 className="text-3xl font-bold text-white mb-6">Time&apos;s Up!</h2>
 
           <div className="space-y-4 mb-6">
             <div className="bg-white/10 rounded-lg p-3">
