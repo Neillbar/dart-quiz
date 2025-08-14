@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeftIcon, BoltIcon, TrophyIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, BoltIcon, TrophyIcon, ClockIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
 import { KeyboardMode, Multiplier } from '@/types';
 import { getRandomQuizQuestions, QuizOption } from '@/services/quizService';
 import { saveRapidQuizScore, getRapidQuizHighScore } from '@/services/rapidQuizService';
@@ -13,6 +14,8 @@ interface RapidQuizGameProps {
 type GameState = 'menu' | 'playing' | 'finished';
 
 const RapidQuizGame: React.FC<RapidQuizGameProps> = ({ userId }) => {
+  const router = useRouter();
+  
   // Game state
   const [gameState, setGameState] = useState<GameState>('menu');
   const [timeRemaining, setTimeRemaining] = useState(30);
@@ -229,39 +232,56 @@ const RapidQuizGame: React.FC<RapidQuizGameProps> = ({ userId }) => {
   // Menu screen
   if (gameState === 'menu') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-900 to-orange-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="mb-8">
-            <BoltIcon className="w-24 h-24 text-yellow-400 mx-auto mb-4" />
-            <h1 className="text-5xl font-bold text-white mb-2">Rapid Quiz</h1>
-            <p className="text-xl text-white/80">30 seconds of non-stop dart checkouts!</p>
-          </div>
-
-          {personalBest > 0 && (
-            <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-white/60 text-sm">Your Best Score</p>
-              <p className="text-3xl font-bold text-yellow-400">{personalBest}</p>
-            </div>
-          )}
-
+      <div className="min-h-screen bg-gradient-to-br from-yellow-900 to-orange-900">
+        <div className="container mx-auto px-4 py-8">
           <button
-            onClick={startGame}
-            disabled={loading}
-            className="px-8 py-4 bg-yellow-500 hover:bg-yellow-400 text-gray-900 rounded-lg font-bold text-xl transition-all transform hover:scale-105 disabled:opacity-50"
+            onClick={() => router.push('/mini-games')}
+            className="mb-6 flex items-center gap-2 text-white hover:text-yellow-300 transition-colors"
           >
-            {loading ? 'Loading...' : 'Start Game'}
-          </button>
-
-          <button
-            onClick={() => window.location.href = '/mini-games'}
-            className="block mx-auto mt-4 text-white/60 hover:text-white/80 transition-colors"
-          >
+            <ArrowLeftIcon className="w-5 h-5" />
             Back to Mini Games
           </button>
 
-          {error && (
-            <div className="mt-4 text-red-400">{error}</div>
-          )}
+          <div className="max-w-2xl mx-auto pt-12">
+            <div className="text-center">
+              <div className="mb-6">
+                <BoltIcon className="w-20 h-20 text-yellow-400 mx-auto mb-4" />
+                <h1 className="text-4xl font-bold text-white mb-2">Rapid Quiz</h1>
+                <p className="text-lg text-white/80">30 seconds of non-stop dart checkouts!</p>
+              </div>
+
+              {personalBest > 0 && (
+                <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-xs mx-auto">
+                  <p className="text-white/60 text-sm">Your Best Score</p>
+                  <p className="text-3xl font-bold text-yellow-400">{personalBest}</p>
+                </div>
+              )}
+
+              <button
+                onClick={startGame}
+                disabled={loading}
+                className="px-8 py-3 bg-yellow-500 hover:bg-yellow-400 text-gray-900 rounded-lg font-bold text-lg transition-all transform hover:scale-105 disabled:opacity-50"
+              >
+                {loading ? 'Loading...' : 'Start Game'}
+              </button>
+
+              {/* Leaderboard Button */}
+              <div className="mt-6">
+                <button
+                  onClick={() => router.push('/mini-games/rapid-quiz/leaderboard')}
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 flex items-center gap-3 mx-auto shadow-lg"
+                >
+                  <TrophyIcon className="w-6 h-6" />
+                  View Leaderboard
+                  <TrophyIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              {error && (
+                <div className="mt-4 text-red-400">{error}</div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -336,13 +356,13 @@ const RapidQuizGame: React.FC<RapidQuizGameProps> = ({ userId }) => {
               Play Again
             </button>
             <button
-              onClick={() => window.location.href = '/mini-games/rapid-quiz/leaderboard'}
+              onClick={() => router.push('/mini-games/rapid-quiz/leaderboard')}
               className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold transition-all"
             >
               View Leaderboard
             </button>
             <button
-              onClick={() => window.location.href = '/mini-games'}
+              onClick={() => router.push('/mini-games')}
               className="w-full px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-bold transition-all"
             >
               Back to Mini Games
@@ -370,7 +390,7 @@ const RapidQuizGame: React.FC<RapidQuizGameProps> = ({ userId }) => {
           <button 
             onClick={() => {
               if (window.confirm('Are you sure you want to quit? Your progress will be lost.')) {
-                window.location.href = '/mini-games';
+                router.push('/mini-games');
               }
             }}
             className="p-2 hover:bg-white/10 rounded-lg"
